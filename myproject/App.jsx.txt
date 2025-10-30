@@ -1,0 +1,93 @@
+
+
+
+import React, { useEffect, useState } from "react";
+
+const calculatePoints = (amount) => {
+  if (amount <= 50) return 0;
+  if (amount <= 100) return amount - 50;
+  return 50 + (amount - 100) * 2;
+};
+
+const getMonthName = (dateString) =>
+  new Date(dateString).toLocaleString("default", { month: "long" });
+
+const fetchTransactions = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { customer: "Gowri", amount: 120, date: "2025-01-15" },
+        { customer: "Gowri", amount: 75, date: "2025-02-10" },
+        { customer: "Gowri", amount: 200, date: "2025-02-25" },
+        { customer: "Bhavya", amount: 90, date: "2025-01-05" },
+        { customer: "Bhavya", amount: 110, date: "2025-03-10" },
+        { customer: "Champ", amount: 45, date: "2025-01-12" },
+        { customer: "Champ", amount: 130, date: "2025-03-20" },
+      ]);
+    }, 1000);
+  });
+};
+
+export default function App() {
+  const [transactions, setTransactions] = useState([]);
+  const [rewards, setRewards] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions().then((data) => {
+      setTransactions(data);
+      setLoading(false);
+      calculateRewards(data);
+    });
+  }, []);
+
+  const calculateRewards = (data) => {
+    const summary = {};
+
+    data.forEach(({ customer, amount, date }) => {
+      const month = getMonthName(date);
+      const points = calculatePoints(amount);
+
+      if (!summary[customer]) summary[customer] = { total: 0 };
+      summary[customer].total += points;
+      summary[customer][month] = (summary[customer][month] || 0) + points;
+    });
+
+    setRewards(summary);
+  };
+
+  if (loading) return <h3>Loading transactions...</h3>;
+
+  return (
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h2>Customer Rewards Program</h2>
+      <table
+        border="1"
+        cellPadding="8"
+        style={{ borderCollapse: "collapse", marginTop: "20px" }}
+      >
+        <thead style={{ backgroundColor: "#f3f3f3" }}>
+          <tr>
+            <th>Customer</th>
+            <th>January</th>
+            <th>February</th>
+            <th>March</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(rewards).map(([customer, months]) => (
+            <tr key={customer}>
+              <td>{customer}</td>
+              <td>{months["January"] || 0}</td>
+              <td>{months["February"] || 0}</td>
+              <td>{months["March"] || 0}</td>
+              <td>{months.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
